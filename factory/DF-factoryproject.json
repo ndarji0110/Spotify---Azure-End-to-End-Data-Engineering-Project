@@ -1,0 +1,15 @@
+{
+	"name": "DF-factoryproject",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "4dffadda-1c92-4bf1-9b8b-59ab5771147b",
+		"tenantId": "cccd3858-c35b-46b7-8cd6-906bd330daa9"
+	}
+}
