@@ -21,7 +21,7 @@
 				}
 			},
 			{
-				"name": "lasrcdc",
+				"name": "lastcdc",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
