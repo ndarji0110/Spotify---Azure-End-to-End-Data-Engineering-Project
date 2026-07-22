@@ -6,7 +6,7 @@ This repository contains an end-to-end data engineering project that ingests Spo
 
 This repository focuses specifically on the **Azure Data Factory (ADF) pipeline layer** of a larger Spotify data engineering project. It demonstrates ETL orchestration, incremental data ingestion, and infrastructure-as-code patterns using ADF.
 
-For the complete end-to-end project (including analytics, reporting, or ML components), see related repositories in the same organization.
+For the complete end-to-end project (including analytics, reporting), see related repositories in the same organization.
 
 ## Project overview
 
