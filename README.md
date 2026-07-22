@@ -34,7 +34,8 @@ This repository contains an end-to-end data engineering project that ingests Spo
 
 This approach minimizes data transfer and processing overhead by only ingesting records that have changed since the last run.
 
-![Incremental Ingestion Pipeline](./images/incremental_ingestion_pipeline.png)
+<img width="946" height="412" alt="image" src="https://github.com/user-attachments/assets/a66ad93c-b045-4c16-a759-a1dcea44b40d" />
+
 
 ### 2. With Loop Incremental Ingestion Pipeline
 **Purpose:** Enables batch processing of multiple data sources using a ForEach loop with incremental logic.
@@ -49,7 +50,8 @@ This approach minimizes data transfer and processing overhead by only ingesting 
 
 This pipeline is ideal for enterprise scenarios where you need to process multiple Spotify data feeds (e.g., user data, streaming events, playlist metadata) concurrently while maintaining incremental ingestion patterns.
 
-![With Loop Incremental Ingestion Pipeline](./images/withloop_incremental_pipeline.png)
+<img width="1011" height="516" alt="image" src="https://github.com/user-attachments/assets/4f0690d1-a946-4550-98b8-52d8163cbad1" />
+
 
 **Key Benefits:**
 - Scalable: Handles multiple data sources in a single pipeline run
