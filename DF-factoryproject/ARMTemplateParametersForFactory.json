@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "DF-factoryproject"
+		},
+		"azure sql_password": {
+			"value": ""
+		},
+		"datalake_connectionString": {
+			"value": ""
+		},
+		"azure sql_properties_typeProperties_server": {
+			"value": "neelprojectserver.database.windows.net"
+		},
+		"azure sql_properties_typeProperties_database": {
+			"value": "Spotify"
+		},
+		"azure sql_properties_typeProperties_userName": {
+			"value": "neeldarji"
+		}
+	}
+}
