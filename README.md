@@ -1,6 +1,6 @@
 # Spotify - Azure End-to-End Data Engineering Project
 
-A comprehensive end-to-end data engineering solution demonstrating data ingestion, transformation, and orchestration of Spotify analytics data on Microsoft Azure using Azure Data Factory, Databricks, and Delta Lake.
+A comprehensive end-to-end data engineering solution demonstrating data ingestion, transformation, and orchestration of Spotify analytics data on Microsoft Azure using Azure Data Factory, Databricks, [...]
 
 ## 📋 Project Overview
 
@@ -281,15 +281,45 @@ cluster_config = {
 }
 ```
 
-### 2. Configure Storage Mount (ADLS)
+### 2. Configure Storage Access with Databricks Connector
+
+#### A. Assign Storage Contributor Role to Databricks Workspace
+
+```bash
+# Get the Databricks Workspace Service Principal Object ID
+WORKSPACE_SP_ID=$(az databricks workspace show \
+  --resource-group spotify-rg \
+  --name spotify-dbws \
+  --query identity.principalId -o tsv)
+
+# Assign Storage Blob Data Contributor role
+az role assignment create \
+  --assignee-object-id $WORKSPACE_SP_ID \
+  --role "Storage Blob Data Contributor" \
+  --scope /subscriptions/{subscription-id}/resourceGroups/spotify-rg/providers/Microsoft.Storage/storageAccounts/spotifydata<unique-id>
+```
+
+#### B. Configure Databricks Connector in Notebooks
+
+Use the Databricks connector to access ADLS Gen2 directly without mounting:
 
 ```python
-dbutils.fs.mount(
-    source="abfss://bronze@spotifydata<unique-id>.dfs.core.windows.net/",
-    mount_point="/mnt/bronze",
-    extra_configs={
-        "fs.azure.account.key.spotifydata<unique-id>.dfs.core.windows.net": dbutils.secrets.get(scope="azure-scope", key="storage-key")
-    }
+# Configure Databricks connector for ADLS Gen2
+storage_account = "spotifydata<unique-id>"
+container = "bronze"
+
+# Set Spark configuration for Databricks connector
+spark.conf.set(
+    f"fs.azure.account.auth.type.{storage_account}.dfs.core.windows.net",
+    "OAuth"
+)
+spark.conf.set(
+    f"fs.azure.account.oauth.provider.type.{storage_account}.dfs.core.windows.net",
+    "org.apache.hadoop.fs.azurebricksfsdaemon.AzureBricksDataDaemon"
+)
+spark.conf.set(
+    f"fs.azure.account.oauth2.client.endpoint.{storage_account}.dfs.core.windows.net",
+    f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
 )
 ```
 
@@ -298,10 +328,18 @@ dbutils.fs.mount(
 **Notebook: `01_bronze_ingestion`**
 
 ```python
-# Read raw Spotify data from ADLS
+# Configure storage account details
+storage_account = "spotifydata<unique-id>"
+container = "bronze"
+path = "spotify/tracks"
+
+# Build the ADLS Gen2 path
+adls_path = f"abfss://{container}@{storage_account}.dfs.core.windows.net/{path}/"
+
+# Read raw Spotify data from ADLS using Databricks connector
 df_raw = spark.read \
     .format("parquet") \
-    .load("/mnt/bronze/spotify/tracks/")
+    .load(adls_path)
 
 # Store in Bronze Delta Table
 df_raw.write \
@@ -363,7 +401,7 @@ top_tracks = df_silver \
 top_tracks.write \
     .mode("overwrite") \
     .format("delta") \
-    .option("path", "/mnt/gold/spotify/top_tracks") \
+    .option("path", "abfss://gold@spotifydata<unique-id>.dfs.core.windows.net/spotify/top_tracks") \
     .saveAsTable("gold.top_50_tracks")
 
 # Artist Aggregations
@@ -379,7 +417,7 @@ artist_stats = df_silver \
 artist_stats.write \
     .mode("overwrite") \
     .format("delta") \
-    .option("path", "/mnt/gold/spotify/artist_stats") \
+    .option("path", "abfss://gold@spotifydata<unique-id>.dfs.core.windows.net/spotify/artist_stats") \
     .saveAsTable("gold.artist_statistics")
 
 print("Gold layer tables created successfully")
@@ -590,12 +628,12 @@ spark.sql("CACHE TABLE silver.dim_tracks")
 
 ## 🔐 Security Best Practices
 
-1. **Secrets Management**
-   ```python
-   storage_key = dbutils.secrets.get(scope="azure-scope", key="storage-key")
-   ```
+1. **Storage Access Control**
+   - Use Storage Blob Data Contributor role assignment for Databricks workspace
+   - Leverages Azure Managed Identity for secure, credential-free access
+   - No need to manage storage account keys in secrets
 
-2. **Service Principal**: Use Azure AD service principals for authentication
+2. **Service Principal**: Use Azure AD service principals for authentication in ADF
 
 3. **Network Security**: 
    - Deploy in VNet with firewall rules
@@ -629,6 +667,12 @@ databricks jobs cancel-run --run-id <run-id>
 
 # Check ADLS contents
 az storage fs file list --file-system bronze --account-name spotifydata<id>
+
+# Assign Storage Blob Data Contributor role
+az role assignment create \
+  --assignee-object-id <workspace-sp-id> \
+  --role "Storage Blob Data Contributor" \
+  --scope /subscriptions/{subscription-id}/resourceGroups/spotify-rg/providers/Microsoft.Storage/storageAccounts/spotifydata<unique-id>
 ```
 
 ---
@@ -643,6 +687,7 @@ az storage fs file list --file-system bronze --account-name spotifydata<id>
 | Format | Delta Lake | ACID transactions & time travel |
 | Orchestration | Azure Data Factory + Databricks Jobs | Automation & scheduling |
 | Monitoring | Application Insights | Logging & alerting |
+| Storage Access | Databricks Connector + Managed Identity | Secure credential-free access |
 
 ---
 
